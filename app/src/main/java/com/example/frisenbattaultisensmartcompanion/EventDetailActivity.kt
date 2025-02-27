@@ -50,27 +50,7 @@ class EventDetailActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun EventListScreen() {
-    val events = Events() // Get the fake events list
-    val context = LocalContext.current
 
-    Scaffold(topBar = {
-        TopAppBar(title = { Text("ISEN Events") })
-    }) { innerPadding ->
-        LazyColumn(modifier = Modifier.padding(innerPadding)) {
-            items(events) { event ->
-                EventItem(event = event, onClick = {
-                    val intent = Intent(context, EventDetailActivity::class.java).apply {
-                        putExtra("EVENT", event) // Vérifie que Event implémente Serializable ou Parcelable
-                    }
-                    context.startActivity(intent)
-                })
-            }
-        }
-    }
-}
 
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -54,6 +54,7 @@ dependencies {
     implementation (libs.retrofit2.retrofit)
     implementation (libs.retrofit2.converter.gson)
     implementation (libs.gson)
+    implementation(libs.generativeai)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
