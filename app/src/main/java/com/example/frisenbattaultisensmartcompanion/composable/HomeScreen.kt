@@ -1,5 +1,6 @@
 package com.example.frisenbattaultisensmartcompanion.composable
 
+import android.app.Application
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -23,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,16 +36,29 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.AndroidViewModel
 import com.example.frisenbattaultisensmartcompanion.R
 import com.example.frisenbattaultisensmartcompanion.gemini.Gemini
 import kotlinx.coroutines.launch
 import kotlin.math.log
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.asLiveData
+import kotlinx.coroutines.Dispatchers
+import com.example.frisenbattaultisensmartcompanion.database.QuestionResponseDao
+import com.example.frisenbattaultisensmartcompanion.database.QuestionResponse
+import com.example.frisenbattaultisensmartcompanion.composable.ChatViewModel
+
+
 
 @Composable
-fun HomeView() {
+fun HomeView(viewModel: ChatViewModel = viewModel()) {
     Column(modifier = Modifier.fillMaxSize()) {
         Logotop()
-        Chatbot()
+        Chatbot(viewModel = viewModel)
     }
 }
 
@@ -66,52 +81,41 @@ fun Logotop() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Chatbot(modifier: Modifier = Modifier) {
+fun Chatbot(viewModel: ChatViewModel = viewModel(), modifier: Modifier = Modifier) {
     var text by remember { mutableStateOf("") }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    var savedchat by remember { mutableStateOf("") }
-    var ListChat by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
-    var analyzedResponse by remember { mutableStateOf("") }
-
-    val fakeResponses = listOf(
-        "I'm just a bot, but I'm listening!",
-        "Interesting! Tell me more.",
-        "I'm not sure I understand 🤔",
-        "Good question!",
-        "Try asking me another question."
-    )
+    val chatMessages by viewModel.chatMessages.collectAsState()
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        // Affichage des messages
+        // Affichage des messages depuis la DB
         Column(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .padding(bottom = 16.dp).verticalScroll(rememberScrollState())
+                .padding(bottom = 16.dp)
+                .verticalScroll(rememberScrollState())
         ) {
-            ListChat.forEach { (userMsg, analyzedResponse) ->
-                // Message de l'utilisateur avec fond rouge
+            chatMessages.forEach { message ->
                 Text(
-                    text = "You <3: $userMsg",
+                    text = "You <3: ${message.question}",
                     modifier = Modifier
                         .padding(8.dp)
                         .background(Color.Red)
                         .fillMaxWidth(),
-                    color = Color.White // Texte blanc pour l'utilisateur
+                    color = Color.White
                 )
-                // Message du bot avec fond rouge clair
                 Text(
-                    text = "Bot: $analyzedResponse",
+                    text = "Bot: ${message.response}",
                     modifier = Modifier
                         .padding(8.dp)
                         .background(Color.LightGray)
                         .fillMaxWidth(),
-                    color = Color.Black // Texte noir pour le bot
+                    color = Color.Black
                 )
             }
         }
@@ -126,20 +130,18 @@ fun Chatbot(modifier: Modifier = Modifier) {
                 label = { Text("Ask a question...") },
                 modifier = Modifier.weight(1f),
                 colors = TextFieldDefaults.textFieldColors(
-                    containerColor = Color.Red.copy(alpha = 0.1f), // Fond rouge clair
-                    focusedIndicatorColor = Color.Red, // Indicateur de focus rouge
-                    unfocusedIndicatorColor = Color.Red, // Indicateur de non-focus rouge
-                    cursorColor = Color.Red // Curseur rouge
+                    containerColor = Color.Red.copy(alpha = 0.1f),
+                    focusedIndicatorColor = Color.Red,
+                    unfocusedIndicatorColor = Color.Red,
+                    cursorColor = Color.Red
                 )
             )
             IconButton(onClick = {
                 if (text.isNotEmpty()) {
                     coroutineScope.launch {
-                        savedchat = text
+                        val analyzedResponse = Gemini.generateResponse(text).trim()
+                        viewModel.addMessage(text, analyzedResponse)
                         text = ""
-                        analyzedResponse = Gemini.generateResponse(savedchat).trim()
-                        Log.d("TAG", "$analyzedResponse")
-                        ListChat = ListChat+listOf(Pair(savedchat, analyzedResponse))
                     }
                 } else {
                     Toast.makeText(context, "Please enter text", Toast.LENGTH_SHORT).show()

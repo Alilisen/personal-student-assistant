@@ -1,6 +1,7 @@
 package com.example.frisenbattaultisensmartcompanion.composable
 
 import android.content.Intent
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -21,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.example.frisenbattaultisensmartcompanion.Event
 import com.example.frisenbattaultisensmartcompanion.EventDetailActivity
 import com.example.frisenbattaultisensmartcompanion.EventItem
@@ -32,7 +34,8 @@ import retrofit2.Response
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventView() {
-    val events = remember { mutableStateOf<List<Event>>(emptyList()) } // Liste dynamique des événements
+    val events =
+        remember { mutableStateOf<List<Event>>(emptyList()) } // Liste dynamique des événements
     val isLoading = remember { mutableStateOf(true) }
     val context = LocalContext.current
 
@@ -66,21 +69,21 @@ fun EventView() {
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Red)
             )
+            Spacer(modifier = Modifier.padding(vertical = 8.dp))
         }
     ) { innerPadding ->
-        if (isLoading.value) {
-            CircularProgressIndicator(modifier = Modifier.fillMaxSize()) // Afficher un indicateur de chargement
-        } else {
-            LazyColumn(modifier = Modifier.padding(innerPadding)) {
-                items(events.value) { event ->
-                    EventItem(event = event, onClick = {
-                        // Ouvrir EventDetailActivity avec les détails de l'événement
-                        val intent = Intent(context, EventDetailActivity::class.java).apply {
-                            putExtra("EVENT", event) // Passe l'objet Event directement
-                        }
-                        context.startActivity(intent)
-                    })
-                }
+
+        LazyColumn(modifier = Modifier.padding(innerPadding)) {
+
+            items(events.value) { event ->
+                EventItem(event = event, onClick = {
+                    // Ouvrir EventDetailActivity avec les détails de l'événement
+                    val intent = Intent(context, EventDetailActivity::class.java).apply {
+                        putExtra("EVENT", event) // Passe l'objet Event directement
+                    }
+                    context.startActivity(intent)
+                })
+                Spacer(modifier = Modifier.padding(vertical = 8.dp))
             }
         }
     }
