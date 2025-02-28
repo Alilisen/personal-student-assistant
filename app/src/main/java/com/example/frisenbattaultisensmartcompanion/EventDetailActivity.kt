@@ -35,7 +35,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import android.content.Context
+import android.content.SharedPreferences
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import android.os.Handler
+import android.os.Looper
 
 class EventDetailActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,6 +89,12 @@ fun EventItem(event: Event, onClick: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventDetailScreen(event: Event, onBackClick: () -> Unit) {
+    val context = LocalContext.current
+    val preferences: SharedPreferences = context.getSharedPreferences("EventPreferences", Context.MODE_PRIVATE)
+
+    // Load the notification status from SharedPreferences
+    val notificationStatus = remember { mutableStateOf(preferences.getBoolean(event.id, false)) }
+
     Scaffold(
         topBar = {
             SmallTopAppBar(
@@ -89,6 +110,32 @@ fun EventDetailScreen(event: Event, onBackClick: () -> Unit) {
                         style = typography.titleLarge.copy(color = Color.White), // Couleur blanche pour le texte
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center // Centrer le texte
+                    )
+                },
+                actions = {
+                    IconButton(onClick = {
+                        // Toggle notification status and save to SharedPreferences
+                        val newStatus = !notificationStatus.value
+                        notificationStatus.value = newStatus
+                        preferences.edit().putBoolean(event.id, newStatus).apply()
+                        // Trigger notification 10 seconds after subscription
+                        if (newStatus) {
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                sendNotification(context, event)
+                            }, 10000) // 10 seconds delay
+                        }
+                    }) {
+                        val icon = if (notificationStatus.value) {
+                            Icons.Filled.Notifications
+                        } else {
+                            Icons.Filled.Clear
+                        }
+                        Icon(icon, contentDescription = "Notification Icon", tint = Color.White)
+                    }
+                    Text(
+                        text = if (notificationStatus.value) "Unmute" else "Mute",
+                        color = Color.White,
+                        modifier = Modifier.padding(end = 16.dp) // Add some padding to align the text
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Red) // Fond rouge
@@ -168,4 +215,30 @@ fun EventDetailScreen(event: Event, onBackClick: () -> Unit) {
             }
         }
     }
+}
+
+fun sendNotification(context: Context, event: Event) {
+    val notificationManager =
+        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+    // Create notification channel for devices with API level 26 and higher
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val channel = NotificationChannel(
+            "event_notifications",
+            "Event Notifications",
+            NotificationManager.IMPORTANCE_DEFAULT
+        )
+        notificationManager.createNotificationChannel(channel)
+    }
+
+    // Create notification
+    val notification: Notification = NotificationCompat.Builder(context, "event_notifications")
+        .setContentTitle("Event Reminder")
+        .setContentText("Don't forget about the event: ${event.title}")
+        .setSmallIcon(android.R.drawable.ic_dialog_info)
+        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        .build()
+
+    // Send notification
+    notificationManager.notify(event.id.hashCode(), notification) // Unique ID for each event
 }
