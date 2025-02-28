@@ -48,54 +48,54 @@ data class Event(
 ) : Serializable
 
 
-fun Events(): List<Event> {
-    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-    val events = mutableListOf<Event>()
-
-    events.add(
-        Event(
-            id = "1",
-            title = "BDE Evening",
-            description = "A fun afterwork organized by BDE.",
-            date = "2025-03-01",
-            location = "ISEN Toulon",
-            category = "Social"
-        )
-    )
-
-    events.add(
-        Event(
-            id = "2",
-            title = "Gala",
-            description = "Annual Gala event.",
-            date = "2025-05-15",
-            location = "Le Palais des Congrès",
-            category = "Formal"
-        )
-    )
-
-    events.add(
-        Event(
-            id = "3",
-            title = "Cohesion Day",
-            description = "Team building day for all students.",
-            date = "2025-06-10",
-            location = "ISEN Toulon",
-            category = "Team Building"
-        )
-    )
-    events.add(
-        Event(
-            id = "4",
-            title = "Caddie Day",
-            description = "Follow the caddie and find the path of happiness.",
-            date = "2025-06-10",
-            location = "ISEN to Barathym",
-            category = "Drinking party"
-        )
-    )
-    return events
-}
+//fun Events(): List<Event> {
+//    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+//    val events = mutableListOf<Event>()
+//
+//    events.add(
+//        Event(
+//            id = "1",
+//            title = "BDE Evening",
+//            description = "A fun afterwork organized by BDE.",
+//            date = "2025-03-01",
+//            location = "ISEN Toulon",
+//            category = "Social"
+//        )
+//    )
+//
+//    events.add(
+//        Event(
+//            id = "2",
+//            title = "Gala",
+//            description = "Annual Gala event.",
+//            date = "2025-05-15",
+//            location = "Le Palais des Congrès",
+//            category = "Formal"
+//        )
+//    )
+//
+//    events.add(
+//        Event(
+//            id = "3",
+//            title = "Cohesion Day",
+//            description = "Team building day for all students.",
+//            date = "2025-06-10",
+//            location = "ISEN Toulon",
+//            category = "Team Building"
+//        )
+//    )
+//    events.add(
+//        Event(
+//            id = "4",
+//            title = "Caddie Day",
+//            description = "Follow the caddie and find the path of happiness.",
+//            date = "2025-06-10",
+//            location = "ISEN to Barathym",
+//            category = "Drinking party"
+//        )
+//    )
+//    return events
+//}
 
 
 data class TabBarItem(

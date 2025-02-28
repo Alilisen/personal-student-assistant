@@ -1,12 +1,10 @@
 package com.example.frisenbattaultisensmartcompanion.composable
 
-import android.app.Application
-import android.util.Log
+
+import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,26 +34,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.AndroidViewModel
 import com.example.frisenbattaultisensmartcompanion.R
 import com.example.frisenbattaultisensmartcompanion.gemini.Gemini
 import kotlinx.coroutines.launch
-import kotlin.math.log
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.asLiveData
-import kotlinx.coroutines.Dispatchers
-import com.example.frisenbattaultisensmartcompanion.database.QuestionResponseDao
 import com.example.frisenbattaultisensmartcompanion.database.QuestionResponse
-import com.example.frisenbattaultisensmartcompanion.composable.ChatViewModel
-
 
 
 @Composable
 fun HomeView(viewModel: ChatViewModel = viewModel()) {
+
     Column(modifier = Modifier.fillMaxSize()) {
         Logotop()
         Chatbot(viewModel = viewModel)
@@ -86,6 +74,7 @@ fun Chatbot(viewModel: ChatViewModel = viewModel(), modifier: Modifier = Modifie
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val chatMessages by viewModel.chatMessages.collectAsState()
+    val temporaryChatHistory = remember { mutableStateOf(mutableListOf<QuestionResponse>()) }
 
     Column(
         modifier = modifier
@@ -100,7 +89,7 @@ fun Chatbot(viewModel: ChatViewModel = viewModel(), modifier: Modifier = Modifie
                 .padding(bottom = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            chatMessages.forEach { message ->
+            temporaryChatHistory.value.forEach { message ->
                 Text(
                     text = "You <3: ${message.question}",
                     modifier = Modifier
@@ -141,10 +130,12 @@ fun Chatbot(viewModel: ChatViewModel = viewModel(), modifier: Modifier = Modifie
                     coroutineScope.launch {
                         val analyzedResponse = Gemini.generateResponse(text).trim()
                         viewModel.addMessage(text, analyzedResponse)
+                        temporaryChatHistory.value.add(QuestionResponse(question = text, response = analyzedResponse))
                         text = ""
                     }
                 } else {
                     Toast.makeText(context, "Please enter text", Toast.LENGTH_SHORT).show()
+                    text = ""
                 }
             }) {
                 Icon(

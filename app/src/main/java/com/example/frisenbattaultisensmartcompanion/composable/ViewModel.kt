@@ -1,6 +1,7 @@
 package com.example.frisenbattaultisensmartcompanion.composable
 
 import android.app.Application
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.frisenbattaultisensmartcompanion.database.AppDatabase
@@ -29,4 +30,18 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             questionResponseDao.insert(newEntry)
         }
     }
+    fun deleteMessage(id: Int) {
+        viewModelScope.launch {
+            // Supprimer le message de la base de données
+            questionResponseDao.deleteById(id)
+
+            // Mettre à jour la liste des messages
+            _chatMessages.value = questionResponseDao.getAllQuestionsAndResponses()
+        }
+    }
+    var text = mutableStateOf("")
+        private set
 }
+
+
+
